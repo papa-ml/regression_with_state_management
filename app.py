@@ -3,17 +3,40 @@ import numpy as np
 from joblib import load
 
 # Initialize the session state with an empty prediction
+if "pred" not in st.session_state:
+    st.session_state["pred"] = None
+
 
 # Function to load the model (use caching)
+@st.cache_resource(show_spinner="Loading model...")
+def load_model():
+    pipe = load('model/model.joblib')
+
+    return pipe
 
 # Callback function to make a prediction.
 # Use kwargs to pass the model as an argument
 # It updates the value of the prediction stored in the state
+def make_prediction(pipe):
+    miles = st.session_state['miles']
+    year = st.session_state['year']
+    make = st.session_state['make']
+    model = st.session_state['model']
+    engine_size = st.session_state['engine_size']
+    province = st.session_state['province']
+
+    X_pred = np.array([miles, year, make, model, engine_size,province])
+
+    pred = pipe.predict(X_pred)
+    pred = round(pred[0],2)
+
+    st.session_state['pred'] = pred
 
 if __name__ == "__main__":
     st.title("🍁Used car price calculator")
 
     # Load Model
+    pipe = load_model()
 
     with st.form(key="form"):
         col1, col2, col3 = st.columns(3)
@@ -42,10 +65,13 @@ if __name__ == "__main__":
             st.selectbox("Province", index=0, key="province",
                          options=['NB', 'QC', 'BC', 'ON', 'AB', 'MB', 'SK', 'NS', 'PE', 'NL', 'YT', 'NC', 'OH', 'SC'])
 
-        st.form_submit_button("Calculate", type="primary")
+        st.form_submit_button("Calculate", type="primary", on_click=make_prediction, kwargs=dict(pipe=pipe))
 
     # Display the prediction
     # If the value is empty, display a message to click on the button
     # Otherwise, display the prediction
+    if st.session_state['pred'] is not None:
+        st.subheader(f"The estimated car price is ${st.session_state['pred']}")
+
 
     st.write(st.session_state)

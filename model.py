@@ -3,8 +3,10 @@ from joblib import dump
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.feature_selection import SelectPercentile, mutual_info_regression
+
+
 
 df = pd.read_csv('honda_toyota_ca.csv')
 
@@ -19,7 +21,7 @@ cat_index = [3,4,5,6,7,8,10,11]
 
 cat_features_transformer = Pipeline(
     steps=[
-        ("encoder", OrdinalEncoder()),
+        ("encoder", OneHotEncoder()),
         ("selector", SelectPercentile(mutual_info_regression, percentile=50))
     ]
 )
