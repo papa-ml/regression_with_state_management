@@ -1,6 +1,15 @@
 import streamlit as st
 import numpy as np
 from joblib import load
+import os
+import subprocess
+import pandas as pd
+
+
+model_path = "model/model.joblib"
+
+if not os.path.exists(model_path):
+    subprocess.run(["python", "model.py"], check=True)
 
 # Initialize the session state with an empty prediction
 if "pred" not in st.session_state:
@@ -10,7 +19,7 @@ if "pred" not in st.session_state:
 # Function to load the model (use caching)
 @st.cache_resource(show_spinner="Loading model...")
 def load_model():
-    pipe = load('model/model.joblib')
+    pipe = load(model_path)
 
     return pipe
 
@@ -23,9 +32,13 @@ def make_prediction(pipe):
     make = st.session_state['make']
     model = st.session_state['model']
     engine_size = st.session_state['engine_size']
-    province = st.session_state['province']
+    state = st.session_state['state']
 
-    X_pred = np.array([miles, year, make, model, engine_size,province])
+    # Step 2: Define column names as used in training
+    columns = ['miles', 'year', 'make', 'model', 'engine_size', 'state']
+
+    # Step 3: Construct a DataFrame with correct structure
+    X_pred = pd.DataFrame([[miles, year, make, model, engine_size, state]], columns=columns)
 
     pred = pipe.predict(X_pred)
     pred = round(pred[0],2)
@@ -62,7 +75,7 @@ if __name__ == "__main__":
             st.number_input("Engine size (L)", value=1.5, key="engine_size", min_value=0.9, step=0.1)
         with col3:
             st.selectbox("Make", key="make", index=0, options=['toyota', 'honda'])
-            st.selectbox("Province", index=0, key="province",
+            st.selectbox("State", index=0, key="state",
                          options=['NB', 'QC', 'BC', 'ON', 'AB', 'MB', 'SK', 'NS', 'PE', 'NL', 'YT', 'NC', 'OH', 'SC'])
 
         st.form_submit_button("Calculate", type="primary", on_click=make_prediction, kwargs=dict(pipe=pipe))

@@ -5,7 +5,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.feature_selection import SelectPercentile, mutual_info_regression
-
+import os
 
 
 df = pd.read_csv('honda_toyota_ca.csv')
@@ -17,7 +17,7 @@ y = df['price']
 X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=df[['make', 'model']], test_size=0.2, shuffle=True, random_state=42)
 
 # Preprocessing pipeline
-cat_index = [3,4,5,6,7,8,10,11]
+cat_index = [2,3,5]
 
 cat_features_transformer = Pipeline(
     steps=[
@@ -52,5 +52,5 @@ model.fit(X_train, y_train)
 print(model.score(X_test, y_test))
 
 # Save the model
-
+os.makedirs('model', exist_ok=True)
 dump(model, 'model/model.joblib')
